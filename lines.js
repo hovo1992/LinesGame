@@ -122,10 +122,18 @@ $(function() {
 		chooseColorBtn
 			.attr({'type': 'button', 'value': 'advanced'});
 
+
+	var divResult = $('<div>').attr('id','divResult'),
+		ballsColorsDivLength = new Array(8),
+		ballsColorsDiv = $(ballsColorsDivLength.join('<div/>'));
+
+		ballsColorsDiv.each(function (item, elem){
+			divResult.append($(elem).attr('class','ballsColorsDiv'));
+		})
+
 		$(tds[8])
 			.append(chooseColorBtn)
-			.append(colorsDiv);
-		
+			.append(colorsDiv.append(divResult.append(ballsColorsDivLength)));
 
 		settingsBtn.on('click', function(){
 				let divDspl = getComputedStyle($('#div')[0], null).getPropertyValue('display');
@@ -155,18 +163,11 @@ $(function() {
 				return false;
 			}
 		});
-
-		$(document.body)
-			.append(main
-			.append(container
-				.append(settingsBtn)
-			.append(
-				div.append(
-					form.append(table.append($tbody)).append(applyBtn)))));
-		
 			changeValues();
 			[$('#board')[0], $('#colorCount')[0], $('#firstBallsCount')[0], $('#spawnBallsCount')[0]]
 				.forEach(function(item, i){$(item).on('input', changeValues)});
+	
+		
 
 	function changeValues() {
 		var boardSize = $('#board').val(),
@@ -190,35 +191,91 @@ $(function() {
 			.val(rLLength.val() > rLLength.attr('max') ? rLLength.attr('max') : rLLength.val());
  
 	}
+$(document.body)
+			.append(main
+			.append(container
+				.append(settingsBtn)
+			.append(
+				div.append(
+					form.append(table.append($tbody)).append(applyBtn)))));	
+var red = $('#redDeficient'),
+	green = $('#greenDeficient'),
+	blue = $('#blueDeficient');
+
 
 	$('#fapply').on('click', function() {
-		fapply.apply(this, 
-			$('#redDeficient').prop('checked') ?
+		var isred = red.prop('checked'),
+			isgreen = green.prop('checked'),
+			isblue = blue.prop('checked');
+			if(isred && isgreen && isblue) {
+				blackWhite();
+			} else {
+		fapply.apply(this,
+			isred && isgreen ? [150, 180, 181, 315] :
+			isred && isblue ? [60, 135, 285, 330] :
+			isgreen && isblue ? [0, 45, 270, 359] :
+			isred ?
 				[60, 70, 71, 315] :
-		 	$('#greenDeficient').prop('checked') ? 
+		 	isgreen ? 
 		 		[0, 45, 150, 359] :
-		 	$('#blueDeficient').prop('checked') ?
-		 		[0, 150, 285, 359] :
+		 	isblue ? [0, 150, 285, 359] :
 		 		[0, 180, 181, 359]);
+	}});
+
+	$('#colorsDiv :checkbox').each(function(item, elem) {
+		$(elem).on('click', refuse);
 	});
+	function refuse() {
+		var hue = $('#hue'),
+			saturation = $('#colorSaturation'),
+			lightness = $('#colorLightness'),
+		    isred = red.prop('checked'),
+			isgreen = green.prop('checked'),
+			isblue = blue.prop('checked');
+
+			if(isred && isgreen && isblue) {
+				hue.attr('disabled', 'disabled').val(0);
+				saturation.attr('disabled', 'disabled').val(0);
+				lightness.attr('disabled', 'disabled').val(0);
+			} else {
+				hue.removeAttr('disabled');
+				saturation.removeAttr('disabled');
+				lightness.removeAttr('disabled');
+			}
+	}
+
+	function blackWhite() {
+		var step = Math.round(100 / $('#colorCount').val() - 1),
+			colorsArr = new Array(count),
+			count = $('#colorCount').val();
+
+		for (var i = 0; i < count; i++) {
+			colorsArr[i] = 'hsl(0, 0%,' + i * step + '%)';
+		}
+
+		for(var j = 0; j < count; j++){
+		    	// console.log('%c' + (j+1) + '  some text', 'background-color:' + colorsArr[j]);
+		    	$(ballsColorsDiv[j]).css('background', colorsArr[j]);
+		}
+	}
 
 	function fapply(start1, end1, start2, end2){
-	    var palette = 360,
+	    var palette = 359,
 			count = $('#colorCount').val(),
 			random = getRandomizer(start1, end1, start2, end2),
 			colorsArr = new Array(count),
 			step = parseInt(+$('#hue').val()/7);
 
-	    $('#hue').max = palette / count;
+	    $('#hue').max = parseInt(palette / count);
 
-		for (var i = 0; i < count; i++) {
+		for (let i = 0; i < count; i++) {
 			colorsArr[i] = 'hsl(' + random + ',' + $('#colorSaturation').val() + '%,' + $('#colorLightness').val()  + '%)';
 			random += step;
 			if(random > 359) {
 				random %= 360;
 			}
 
-			while( !((random > start1 && random < end1) || (random > start2 && random < end2))) {
+			while( !((random >= start1 && random <= end1) || (random >= start2 && random <= end2))) {
 				if(random < start1) {
 					random += start1;
 				}
@@ -231,8 +288,17 @@ $(function() {
 			}
 		}
 		    for(var j = 0; j < count; j++){
-		    	console.log('%c' + (j+1) + '  some text', 'background-color:' + colorsArr[j]);
+		    	//console.log('%c' + (j+1) + '  some text', 'background-color:' + colorsArr[j]);
+				$(ballsColorsDiv[j]).css('background', colorsArr[j]);
 		    }
+			for (var i = 0; i < $('#colorCount')[0].value ; i++) {
+			console.log($('#colorCount')[0].value);
+			$(ballsColorsDiv[i]).css('display', 'inline-block');
+			for (var j = $('#colorCount')[0].value; j < $('#colorCount')[0].max; j++) {
+				$(ballsColorsDiv[j]).css('display', 'none');
+			}
+			
+		}
 		}
 	function getRandomizer(start1, end1, start2, end2) {
 		    var rand = Math.floor(Math.random() * 2) + 1;
@@ -248,5 +314,7 @@ $(function() {
 		$('#colorSaturation').css('background', '-webkit-linear-gradient(left,hsla(' + hueValue + ', 100%, 50%, 0), hsla(' + hueValue + ', 100%, 50%, 1)');
 		$('#colorLightness').css('background', '-webkit-linear-gradient(left,hsla(0, 0%, 0%, 1), hsla(' + hueValue + ', 100%, 50%, 1)');
 	});
-}}
+
+}
+}
 );
